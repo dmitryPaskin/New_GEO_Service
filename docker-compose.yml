@@ -44,6 +44,19 @@ services:
     networks:
       - mylocal
 
+  grafana:
+    image: dimytry/grafana
+    ports:
+      - "3000:3000"
+    #entrypoint:
+    # - GF_SECURITY_ADMIN_PASSWORD=admin  # Пароль для администратора Grafana
+    #  - GF_USERS_ALLOW_SIGN_UP=false      # Запретить регистрацию новых пользователей
+    depends_on:
+      - prometheus
+    networks:
+      - mylocal
+
+
 volumes:
   postgres_data:
 networks:
