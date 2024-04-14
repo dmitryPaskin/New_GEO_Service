@@ -1,11 +1,14 @@
 package service
 
 import (
+	"GeoServiseAppDate/internal/metrics"
 	"GeoServiseAppDate/internal/models"
 	"bytes"
 	"encoding/json"
+	"github.com/prometheus/client_golang/prometheus"
 	"log"
 	"net/http"
+	"time"
 )
 
 const (
@@ -29,6 +32,14 @@ func NewService(client *http.Client) service {
 }
 
 func (s *service) Address(request models.SearchRequest) ([]*models.AddressSearch, error) {
+	start := time.Now()
+	defer func() {
+		duration := time.Since(start).Seconds()
+		metrics.DBDuration.With(prometheus.Labels{
+			"method": "POST", "path": urlAddress}).
+			Observe(duration)
+	}()
+
 	var result []*models.AddressSearch
 
 	requestBody, err := json.Marshal([]string{request.Query})
@@ -64,6 +75,14 @@ func (s *service) Address(request models.SearchRequest) ([]*models.AddressSearch
 }
 
 func (s *service) Geocode(request models.GeocodeRequest) (*models.AddressGeo, error) {
+	start := time.Now()
+	defer func() {
+		duration := time.Since(start).Seconds()
+		metrics.DBDuration.With(prometheus.Labels{
+			"method": "POST", "path": urlGeocode}).
+			Observe(duration)
+	}()
+
 	var result *models.AddressGeo
 
 	requestBody, err := json.Marshal(request)

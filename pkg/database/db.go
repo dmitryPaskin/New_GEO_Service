@@ -31,7 +31,7 @@ func New() (Database, error) {
 		return Database{}, err
 	}
 
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 20)
 	if err = db.Ping(); err != nil {
 		return Database{}, err
 	}

@@ -1,9 +1,12 @@
 package authRepository
 
 import (
+	"GeoServiseAppDate/internal/metrics"
 	"GeoServiseAppDate/internal/models"
 	"database/sql"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/prometheus/client_golang/prometheus"
+	"time"
 )
 
 type AuthRepository interface {
@@ -25,6 +28,14 @@ func New(database *sql.DB) AuthRepository {
 }
 
 func (ar *authRepository) SaveUser(user models.User) error {
+	start := time.Now()
+	defer func() {
+		duration := time.Since(start).Seconds()
+		metrics.DBDuration.With(prometheus.Labels{
+			"function": "SaveUser"}).
+			Observe(duration)
+	}()
+
 	query := ar.sqlBuilder.Insert("users").
 		Columns("login", "password").
 		Values(user.Login, user.Password)
@@ -37,6 +48,14 @@ func (ar *authRepository) SaveUser(user models.User) error {
 }
 
 func (ar *authRepository) CheckUser(user models.User) (bool, error) {
+	start := time.Now()
+	defer func() {
+		duration := time.Since(start).Seconds()
+		metrics.DBDuration.With(prometheus.Labels{
+			"function": "CheckUser"}).
+			Observe(duration)
+	}()
+
 	query := ar.sqlBuilder.Select("COUNT(*)").
 		From("users").
 		Where(sq.Eq{"login": user.Login})
@@ -53,6 +72,14 @@ func (ar *authRepository) CheckUser(user models.User) (bool, error) {
 }
 
 func (ar *authRepository) GetUser(user models.User) (models.User, error) {
+	start := time.Now()
+	defer func() {
+		duration := time.Since(start).Seconds()
+		metrics.DBDuration.With(prometheus.Labels{
+			"function": "GetUser"}).
+			Observe(duration)
+	}()
+
 	query := ar.sqlBuilder.Select("login", "password").
 		From("users").Where(sq.Eq{"login": user.Login})
 

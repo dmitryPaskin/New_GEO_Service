@@ -2,9 +2,11 @@ FROM golang:alpine as builder
 
 WORKDIR /app
 
+
 COPY . .
 
-RUN go mod download
+#RUN go mod download
+RUN go mod tidy
 
 RUN go build -o ./main ./cmd/main.go
 

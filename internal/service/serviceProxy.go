@@ -1,8 +1,11 @@
 package service
 
 import (
+	"GeoServiseAppDate/internal/metrics"
 	"GeoServiseAppDate/internal/models"
 	"GeoServiseAppDate/internal/repository"
+	"github.com/prometheus/client_golang/prometheus"
+	"time"
 )
 
 type serviceProxy struct {
@@ -24,10 +27,18 @@ func (sp *serviceProxy) Address(request models.SearchRequest) ([]*models.Address
 	}
 
 	if isCache {
+		start := time.Now()
 		result, err := sp.repo.GetDataAddress(&request)
 		if err != nil {
 			return nil, err
 		}
+
+		duration := time.Since(start).Seconds()
+		go func() {
+			metrics.CacheDuration.With(prometheus.Labels{
+				"endpoint": "api/address/search"}).Observe(duration)
+		}()
+
 		return result, nil
 	} else {
 		result, err := sp.realService.Address(request)
@@ -49,10 +60,17 @@ func (sp *serviceProxy) Geocode(request models.GeocodeRequest) (*models.AddressG
 	}
 
 	if isCache {
+		start := time.Now()
 		result, err := sp.repo.GetDataGEO(&request)
 		if err != nil {
 			return nil, err
 		}
+
+		duration := time.Since(start).Seconds()
+		go func() {
+			metrics.CacheDuration.With(prometheus.Labels{
+				"endpoint": "api/address/geocode"}).Observe(duration)
+		}()
 		return result, nil
 	} else {
 		result, err := sp.realService.Geocode(request)

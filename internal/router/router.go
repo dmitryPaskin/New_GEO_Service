@@ -1,6 +1,7 @@
 package router
 
 import (
+	_ "GeoServiseAppDate/docs"
 	"GeoServiseAppDate/internal/controller/authorizationHandlers"
 	"GeoServiseAppDate/internal/controller/responder"
 	"GeoServiseAppDate/internal/controller/searchGEOHandlers"
@@ -14,6 +15,8 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/jwtauth"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/zap"
 	"log"
 	"net/http"
@@ -52,6 +55,9 @@ func (r *Router) Start() {
 
 	r.chi.Use(middleware.Recoverer)
 	r.chi.Use(middleware.Logger)
+
+	r.chi.Get("/swagger/*", httpSwagger.WrapHandler)
+	r.chi.Handle("/metrics", promhttp.Handler())
 
 	r.chi.Post("/api/register", r.authHandlers.SingUpHandler)
 	r.chi.Post("/api/login", r.authHandlers.SingInHandler)
