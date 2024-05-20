@@ -10,6 +10,7 @@ import (
 	"GeoServiseAppDate/internal/repository/authRepository"
 	"GeoServiseAppDate/internal/service"
 	"GeoServiseAppDate/internal/service/authService"
+	"GeoServiseAppDate/pkg/ClientsRPC"
 	"GeoServiseAppDate/pkg/database"
 	"context"
 	"github.com/go-chi/chi"
@@ -96,18 +97,28 @@ func (r *Router) Start() {
 	}
 }
 
-func initAuthHandlers(db database.Database, log *zap.Logger) authorizationHandlers.HandlerAuth {
+func initAuthHandlers(db database.Database, logger *zap.Logger) authorizationHandlers.HandlerAuth {
 	repository := authRepository.New(db.DB)
 	proxyService := authService.NewAuthServiceProxy(repository)
 
-	responder := responder.NewRespond(log)
+	responder := responder.NewRespond(logger)
 	return authorizationHandlers.New(proxyService, responder)
 }
 
-func initGEOHandlers(db database.Database, log *zap.Logger) searchGEOHandlers.Handler {
-	repository := repository.New(db.DB)
-	proxyService := service.NewServiceProxy(service.NewService(&http.Client{}), repository)
+func initGEOHandlers(db database.Database, logger *zap.Logger) searchGEOHandlers.Handler {
+	var (
+		proxyService service.Service
+		err          error
+	)
 
-	responder := responder.NewRespond(log)
+	repository := repository.New(db.DB)
+
+	proxyService, err = ClientsRPC.GetRPCProtocol()
+	if err != nil {
+		log.Printf("failed to get ServersRPC client: %s", err)
+		proxyService = service.NewServiceProxy(service.NewService(&http.Client{}), repository)
+	}
+
+	responder := responder.NewRespond(logger)
 	return searchGEOHandlers.New(proxyService, responder)
 }
